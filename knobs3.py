@@ -3,13 +3,13 @@ import board
 
 from kmk.extensions.media_keys import MediaKeys
 from kmk.extensions.RGB import RGB, AnimationModes
+from kmk.extensions.LED import LED
 from kmk.keys import KC
 from kmk.kmk_keyboard import KMKKeyboard
 from kmk.modules.encoder import EncoderHandler
 from kmk.scanners.keypad import KeysScanner
 from kmk.modules.layers import Layers as _Layers
 from kmk.modules.mouse_keys import MouseKeys
-
 
 knob = KMKKeyboard()
 
@@ -21,8 +21,6 @@ knob.modules.append(MouseKeys())
 knob.extensions.append(MediaKeys())
 
 knob.matrix = KeysScanner([])
-
-
 
 # Rotary encoders that also acts as keys
 encoder_handler = EncoderHandler()
@@ -38,14 +36,18 @@ rgb_ext = RGB(
     num_pixels=1,
     val_limit=100,
     val_default=25,
-    hue_default=0,
+    hue_default=85,
 )
 knob.extensions.append(rgb_ext)
+
+led_ext = LED(led_pin=board.LED,brightness=75)
+knob.extensions.append(led_ext)
+
 
 # switch between red green and blue for layers
 class Layers(_Layers):
     last_top_layer = 0
-    hues = (0, 85, 170)
+    hues = (85, 0, 14)
     
     def after_hid_send(self, knob):
         if knob.active_layers[0] != self.last_top_layer:
@@ -58,21 +60,30 @@ encoder_handler.map = [
     # Layer 1
     (
         (KC.VOLD, KC.VOLU, KC.MUTE), 
-        (KC.UP, KC.DOWN, KC.MPLY), 
+        (KC.MW_DOWN, KC.MW_UP, KC.MPLY),
         (KC.RIGHT, KC.LEFT, KC.TO(1))
     ),
-    # Layer 2
+
+    # Video controls for YT in a browser or Video LAN Client
+    # Top Click = Play/Pause
+    # Top rotate = control playback speed
+    # Middle Click = TBD
+    # Middle Rotate = next/prev frame (VLC doesn't have prev frame so rewind 3s)
+    # Bottom Click = Change Layer
+    # Bottom Rotate = rew/forward 10s
+
+    # Layer 2 "youtube"
     (
-        (KC.MPRV, KC.MNXT, KC.MPLY), 
+        (KC.LEFT_ANGLE_BRACKET, KC.RIGHT_ANGLE_BRACKET, KC.SPACE),
         (KC.COMMA, KC.DOT, KC.K), 
-        (KC.J, KC.L, KC.TO(2))
+        (KC.L, KC.J, KC.TO(2))
     ),
     
-    # Layer 3
+    # Layer 3 "VLC"
     (
-        (KC.MW_DOWN, KC.MW_UP, KC.MPLY), 
-        (KC.COMMA, KC.DOT, KC.K), 
-        (KC.J, KC.L, KC.TO(0))
+        (KC.KP_MINUS, KC.KP_PLUS, KC.SPACE),
+        (KC.E, KC.LSHIFT(KC.LEFT), KC.TRNS),
+        (KC.LALT(KC.RIGHT), KC.LALT(KC.LEFT), KC.TO(0))
     ),
 ]
 knob.modules.append(encoder_handler)
